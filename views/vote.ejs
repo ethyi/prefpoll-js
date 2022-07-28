@@ -1,0 +1,22 @@
+<%- include("header") -%>
+    <div class="poll">
+      <div class="red-margin"></div>
+      <div class="question">
+        <div class="question-display">
+        <%=poll.question%>
+        </div>
+      </div>
+     <% poll.options.forEach(function(option, i) { %> 
+      <div class="option-display draggable">
+        <div class="option-number"><%=i+1%></div>
+        <div class="option-text"><%=option%></div>
+      </div>
+      <%});%>
+      <div class="poll-buttons">
+        <!-- <button type="button" class="btn btn-secondary btn-lg">Results</button> -->
+        <button type="button" class="btn btn-primary btn-lg">Vote</button>
+        <!-- <button type="button" class="btn btn-info btn-lg">Share</button> -->
+      </div>
+    </div>
+
+    <%- include("footer") -%> 
