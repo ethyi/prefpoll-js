@@ -8,6 +8,7 @@ const port = 3000;
 const path = require("path");
 
 let state = {};
+let ipAddresses = new Set();
 app.use("/static", express.static(path.join(__dirname, "public")));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
@@ -24,7 +25,8 @@ function parseBody(id, body) {
     return element !== "";
   });
   const results = {};
-  return { id, question, options, results };
+  const totalVotes = 0;
+  return { id, question, options, results, totalVotes };
 }
 
 // create new poll
@@ -49,17 +51,20 @@ function addVote(id, order) {
   let results = poll.results;
   let i = order.toString();
   results[i] = (results[i] || 0) + 1;
+  poll.totalVotes += 1;
   // TODO add to DB here
 }
 
 // n is numoptions, p is permutations, p = O(n!), altogether O(pn^3)->(n!n^3)
 function calculateOrder(result, numOptions) {
-  let order = []; // could use hashmap for quicker contains, takes up memory?
+  let index = 0;
+  let order = {}; // could use hashmap for quicker contains, takes up memory?
+  let rankedOptions = [];
   let removed = [];
   // O(p)
   let total = Object.values(result).reduce((acc, val) => acc + val, 0);
   // O(n-1 + n-2+ n-3 ...) = O(n^2) worst case, average O(n)
-  while (order.length < numOptions) {
+  while (rankedOptions.length < numOptions) {
     let [minPercentage, minOption] = [1, 0];
     let [maxPercentage, maxOption] = [0, 0];
     let tallies = {};
@@ -70,12 +75,12 @@ function calculateOrder(result, numOptions) {
       let index = 0;
       let option = key[index];
       // O(n)
-      while (order.includes(option) || removed.includes(option)) {
+      while (rankedOptions.includes(option) || removed.includes(option)) {
         option = key[++index];
       }
-      let votes = (tallies[option] || 0) + value;
-      tallies[option] = votes;
-
+      tallies[option] = (tallies[option] || 0) + value;
+    });
+    Object.entries(tallies).forEach(([option, votes]) => {
       let tallyPercentage = votes / total;
       if (tallyPercentage < minPercentage) {
         [minPercentage, minOption] = [tallyPercentage, option];
@@ -84,14 +89,20 @@ function calculateOrder(result, numOptions) {
         [maxPercentage, maxOption] = [tallyPercentage, option];
       }
     });
-
-    if (maxPercentage <= 0.5) {
+    if (maxPercentage == minPercentage) {
+      let keys = Object.keys(tallies);
+      order[index++] = keys;
+      rankedOptions = rankedOptions.concat(keys);
+      removed = [];
+    } else if (maxPercentage <= 0.5) {
       removed.push(minOption);
     } else {
-      order.push(maxOption);
+      order[index++] = [maxOption];
+      rankedOptions.push(maxOption);
       removed = [];
     }
   }
+
   return order;
 }
 
@@ -99,12 +110,20 @@ app.post("/results", (req, res) => {
   console.log(req.body);
   const id = req.body.id;
   const order = req.body.order;
-  addVote(id, order);
-  // TODO somehow cache it? maybe unnecessary
   let poll = state[id];
-  let numOptions = poll.options.length;
-  let results = poll.results;
-  poll.rankings = calculateOrder(results, numOptions);
+  const ip = req.headers["x-forwarded-for"];
+  if (ipAddresses.has(ip)) {
+    res.redirect("/vote/" + id);
+    console.log("ip already voted");
+  } else {
+    // ipAddresses.add(ip); // commented for debugging purposes
+    addVote(id, order);
+    // TODO somehow cache it? maybe unnecessary
+    let numOptions = poll.options.length;
+    let results = poll.results;
+    poll.rankings = calculateOrder(results, numOptions);
+  }
+
   res.redirect("/vote/" + id + "/r");
 });
 
@@ -112,7 +131,6 @@ app.get("/vote/:paramName/r", (req, res) => {
   const id = req.params.paramName;
   // TODO import from DB here
   const poll = state[id];
-  console.log(poll.rankings);
   res.render("results", { poll });
 });
 

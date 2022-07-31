@@ -6,13 +6,19 @@
   </div>
 
   <div id="options-container">
-    <% poll.rankings.forEach(function(optionIndex, i) { %>
+    <% Object.entries(poll.rankings).forEach(function([rank,options]) { %>
     <div class="option-display">
-      <div class="option-number"><%=i+1%></div>
-      <div class="option-text"><%=poll.options[optionIndex]%></div>
+      <div class="option-number"><%=parseInt(rank)+1%></div>
+      <div class="option-text"><%=poll.options[options[0]]%></div>
     </div>
-    <%});%>
+    <% options.slice(1).forEach(option=> { %>
+    <div class="option-display">
+      <div class="option-number"></div>
+      <div class="option-text"><%=poll.options[option]%></div>
+    </div>
+    <%});%> <%});%>
   </div>
+  <div class="total-votes">Total Votes: <%=poll.totalVotes%></div>
   <div class="poll-buttons">
     <button type="button" class="btn btn-primary btn-lg">
       Share Vote Link
