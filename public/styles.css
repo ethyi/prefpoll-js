@@ -151,7 +151,11 @@ input:focus{
 }
 
 .draggable {
-  /* position: absolute; */
+  cursor:move;
+}
+.draggable.dragging {
+  opacity: 1;
+  color: blue;
 }
 
 .poll-buttons {

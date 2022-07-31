@@ -1,0 +1,24 @@
+<%- include("header") -%>
+<div class="poll">
+  <div class="red-margin"></div>
+  <div class="question">
+    <div class="question-display"><%=poll.question%></div>
+  </div>
+
+  <div id="options-container">
+    <% poll.rankings.forEach(function(optionIndex, i) { %>
+    <div class="option-display">
+      <div class="option-number"><%=i+1%></div>
+      <div class="option-text"><%=poll.options[optionIndex]%></div>
+    </div>
+    <%});%>
+  </div>
+  <div class="poll-buttons">
+    <button type="button" class="btn btn-primary btn-lg">
+      Share Vote Link
+    </button>
+    <button type="button" class="btn btn-info btn-lg">Share results</button>
+  </div>
+</div>
+
+<%- include("footer") -%>
