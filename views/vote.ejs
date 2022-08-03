@@ -10,6 +10,7 @@
     <input type="hidden" value=<%=poll.id%> name="id" />
     <div id="options-container">
       <% poll.options.forEach(function(option, i) { %> 
+				
       <div class="option-display draggable" draggable="true">
         <input type="hidden" name="order[]" value=<%=i%> />
         <div class="option-number"><%=i+1%></div>
